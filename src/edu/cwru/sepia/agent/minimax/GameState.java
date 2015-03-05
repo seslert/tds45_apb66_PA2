@@ -139,6 +139,8 @@ public class GameState
     	for (Integer unitID : footmanUnitIds)
     	{    		
     		UnitView unit = this.parentState.getUnit(unitID);
+    		this.setXCoordinate(unit.getXPosition());
+    		this.setYCoordinate(unit.getYPosition());
     		
     		System.out.println(unit.getTemplateView().getName() + unitID + " is checking available states...");
     		

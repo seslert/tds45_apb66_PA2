@@ -44,6 +44,8 @@ public class MinimaxAlphaBeta extends Agent
                 Double.POSITIVE_INFINITY,
                 true);
         
+        System.out.println("(" + bestChild.state.getXCoordinate() + ", " + bestChild.state.getYCoordinate() + ") was chosen");
+        
         //Map<Integer, Action> actions = new HashMap<Integer, Action>();
         
         //actions.put(0, Action.createPrimitiveMove(0, Direction.SOUTH));
@@ -87,7 +89,7 @@ public class MinimaxAlphaBeta extends Agent
     	// We are at a terminal node
     	if (depth == 0)
     	{
-    		System.out.println(node.state.getUtility() + " is the best choice.");
+    		System.out.println("(" + node.state.getXCoordinate() + ", " + node.state.getYCoordinate() + ") " + node.state.getUtility() + " is the best choice.");
     		
     		return node; // return best state
     	}
