@@ -6,6 +6,7 @@ import edu.cwru.sepia.action.DirectedAction;
 import edu.cwru.sepia.action.TargetedAction;
 import edu.cwru.sepia.environment.model.state.State;
 import edu.cwru.sepia.environment.model.state.State.StateBuilder;
+import edu.cwru.sepia.environment.model.state.State.StateView;
 import edu.cwru.sepia.environment.model.state.Unit;
 import edu.cwru.sepia.environment.model.state.Unit.UnitView;
 import edu.cwru.sepia.util.Direction;
@@ -27,6 +28,13 @@ public class GameState
 	private final int yExtent;	// The y dimension of the board
 	
 	private final List<Integer> resourceIds;	// The list of resource IDs in the game
+	
+	private StateView parentState;
+	
+	private List<Integer> footmanUnitIds;
+	private List<Integer> archerUnitIds;
+	
+	private List<UnitView> units;
 	
 	private int xCoordinate;	// The x coordinate of the cell
 	private int yCoordinate;	// The y coordinate of the cell
@@ -53,10 +61,30 @@ public class GameState
      * @param state Current state of the episode
      */
     public GameState(State.StateView state) 
-    {
+    {	
     	this.xExtent = state.getXExtent();
     	this.yExtent = state.getYExtent();
     	this.resourceIds = state.getAllResourceIds();
+    	this.units = state.getAllUnits();
+    	this.parentState = state;
+
+    	// Find all of the active units in this state
+    	footmanUnitIds = new ArrayList<Integer>();
+    	archerUnitIds = new ArrayList<Integer>();
+    	
+    	for (UnitView unit : this.units)
+    	{
+    		String unitTypeName = unit.getTemplateView().getName();
+    		
+    		if (unitTypeName.equals("Footman"))
+    		{
+    			footmanUnitIds.add(unit.getID());
+    		}
+    		else if (unitTypeName.equals("Archer"))
+    		{
+    			archerUnitIds.add(unit.getID());
+    		}
+    	}
     }
 
     /**
@@ -82,7 +110,9 @@ public class GameState
     	// getDistanceFromArcherUtility() Shorter distance to archer
     	// getCurrentHealthUtility()
     	// Farther distance from archer - 1.0
-        return 0.0;
+    	UnitView unit = this.parentState.getUnit(0);
+    	
+        return unit.getXPosition() * 2.5;
     }
 
     /**
@@ -104,20 +134,76 @@ public class GameState
     public List<GameStateChild> getChildren() 
     {
     	List<GameStateChild> children = new ArrayList<GameStateChild>();
-    	Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
-    	int actionIndex = 0;
-    	    	
-    	// Generate possible actions from this state
-    	for (Direction direction : Direction.values())
-    	{   
-    		// Create move actions for each direction
-    		//stateActions.put(actionIndex, Action.createPrimitiveMove(actionIndex, ));
+    	
+		// Generate possible actions from this state for each footman unit
+    	for (Integer unitID : footmanUnitIds)
+    	{    		
+    		UnitView unit = this.parentState.getUnit(unitID);
+    		
+    		System.out.println(unit.getTemplateView().getName() + unitID + " is checking states...");
+    		
+        	for (Direction direction : getCardinal())
+        	{ 
+        		Integer archerID = getArcherInRange(unit.getXPosition(), unit.getYPosition());
+        		
+        		// The resulting move is still inbounds
+        		if (inBounds(unit.getXPosition() + direction.xComponent(), unit.getYPosition() + direction.yComponent()))
+        		{        			
+        			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
+        			stateActions.put(0, Action.createPrimitiveMove(unitID, direction));
+        			GameState nextGameState = new GameState(this.parentState);
+        			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
+        			children.add(nextChild);
+        			
+        			System.out.println(unit.getTemplateView().getName() + unitID + " added a move state in direction " + direction);
+        		}
+        		else if (archerID != null)
+        		{
+        			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
+        			stateActions.put(0, Action.createPrimitiveAttack(unitID, archerID));
+        			GameState nextGameState = new GameState(this.parentState);
+        			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
+        			children.add(nextChild);
+        			
+        			System.out.println(unit.getTemplateView().getName() + unitID + " added an attack state.");
+        		}
+        	}	
     	}
-    	// Build potential next states from these actions
-    	// Add states to children
-    	// GameStateChild nextChild = new GameStateChild(actions, nextState);
     	
         return children;
+    }
+    
+    private Direction[] getCardinal()
+    {
+    	Direction[] cardinalDirections = new Direction[4];
+    	cardinalDirections[0] = Direction.valueOf("NORTH");
+    	cardinalDirections[1] = Direction.valueOf("SOUTH");
+    	cardinalDirections[2] = Direction.valueOf("EAST");
+    	cardinalDirections[3] = Direction.valueOf("WEST");    
+    	
+    	return cardinalDirections;
+    }
+    
+    // Check if the position is on the board
+    private boolean inBounds(int x, int y)
+    {
+    	return !(x > this.xExtent || y > this.yExtent || x < 0 || y < 0);    	
+    }
+    
+    // Check if there is an archer that we can attack
+    private Integer getArcherInRange(int x, int y)
+    {
+    	for (Integer archerID : archerUnitIds)
+    	{
+    		UnitView archerUnit = this.parentState.getUnit(archerID);
+    		
+    		if (Math.abs(archerUnit.getXPosition() - x) <= 1 && Math.abs(archerUnit.getYPosition() - y) <= 1)
+    		{
+    			// Can attack
+    			return archerID;
+    		}
+    	}
+    	return null;
     }
     
     // Getter method for x coordinate

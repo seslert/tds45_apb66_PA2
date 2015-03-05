@@ -4,9 +4,11 @@ import edu.cwru.sepia.action.Action;
 import edu.cwru.sepia.agent.Agent;
 import edu.cwru.sepia.environment.model.history.History;
 import edu.cwru.sepia.environment.model.state.State;
+import edu.cwru.sepia.util.Direction;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,9 +41,15 @@ public class MinimaxAlphaBeta extends Agent
         GameStateChild bestChild = alphaBetaSearch(new GameStateChild(newstate),
                 numPlys,
                 Double.NEGATIVE_INFINITY,
-                Double.POSITIVE_INFINITY);
-
-        return bestChild.action;
+                Double.POSITIVE_INFINITY,
+                true);
+        
+        //Map<Integer, Action> actions = new HashMap<Integer, Action>();
+        
+        //actions.put(0, Action.createPrimitiveMove(0, Direction.SOUTH));
+        
+        //return actions;
+        return bestChild.action;     
     }
 
     @Override
@@ -68,57 +76,62 @@ public class MinimaxAlphaBeta extends Agent
      * @param beta The current best value for the minimizing node from this node to the root
      * @return The best child of this node with updated values
      */
-    public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta)
+    public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta, boolean isMaximizer)
     {
-    	/*
-    	// We are back at the root or at a terminal node
-    	if (depth == 0 || node.state.getChildren().isEmpty())
+    	List<GameStateChild> children = orderChildrenWithHeuristics(node.state.getChildren());    
+    	
+		System.out.println("Current Depth: " + depth);
+		System.out.println("Alpha: " + alpha);
+		System.out.println("Beta: " + beta);
+    	
+    	// We are at a terminal node
+    	if (depth == 0)
     	{
-    		return null; //the heuristic value of the node
-    	}    	
-/*    	// orderChildrenWithHeuristics(node.state.getChildren()); TODO: find a place to put this
+    		System.out.println(node.state.getUtility() + " is the best choice.");
+    		
+    		return node; // return best state
+    	}
     	
     	// Evaluate footman's turn (MAX)
-    	if (super.getPlayerNumber() == 0)
+    	if (isMaximizer)
     	{
+    		System.out.println("Maximizing node.");
+
     		double v = Double.NEGATIVE_INFINITY;
     		
-	    	for (GameStateChild child : node.state.getChildren())
+	    	for (GameStateChild child : children)
 	    	{
-	    		//v = Math.max(v, alphaBetaSearch(child, depth - 1, alpha, beta).state.assignedValue);
+	    		v = Math.max(v, alphaBetaSearch(child, depth - 1, alpha, beta, false).state.getUtility());
 	    		alpha = Math.max(alpha, v);
 	    		
 	    		if (beta <= alpha)
 	    		{
-	    			break; // Beta cut off
+        			System.out.println(child.toString() + " is the best choice");
+        			
+	    			return child; // Beta cut off
 	    		}
-	    		//return best child node
 	    	}
 	    }
 	    
 	    // Evaluate archer's turn (MIN)
 	    else
 	    {
+	    	System.out.println("Minimizing node.");
+	    	
 	    	double v = Double.POSITIVE_INFINITY;
 	    			
 	    	for (GameStateChild child : node.state.getChildren())
 	    	{	    		
-	    		//v = Math.min(v, alphaBetaSearch(child, depth - 1, alpha, beta).state.assignedValue);
+	    		v = Math.min(v, alphaBetaSearch(child, depth - 1, alpha, beta, true).state.getUtility());
 	    		beta = Math.min(beta, v);
 	    		
 	    		if (beta <= alpha)
 	    		{
-	    			break; // alpha cut off
+	    			return child; // alpha cut off
 	    		}
-	    		//return best child node
 	    	}
-	    }	*/    
+	    } 
         return node;
-    }
-    
-    public double alphaBetaSearch()
-    {
-    	return 0.0;
     }
 
     /**
