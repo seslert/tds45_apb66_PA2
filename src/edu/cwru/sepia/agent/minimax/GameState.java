@@ -140,22 +140,25 @@ public class GameState
     	{    		
     		UnitView unit = this.parentState.getUnit(unitID);
     		
-    		System.out.println(unit.getTemplateView().getName() + unitID + " is checking states...");
+    		System.out.println(unit.getTemplateView().getName() + unitID + " is checking available states...");
     		
         	for (Direction direction : getCardinal())
         	{ 
         		Integer archerID = getArcherInRange(unit.getXPosition(), unit.getYPosition());
         		
         		// The resulting move is still inbounds
-        		if (inBounds(unit.getXPosition() + direction.xComponent(), unit.getYPosition() + direction.yComponent()))
+        		int nextXCoordinate = unit.getXPosition() + direction.xComponent();
+        		int nextYCoordinate = unit.getYPosition() + direction.yComponent();
+        		
+        		if (inBounds(nextXCoordinate, nextYCoordinate))
         		{        			
         			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
         			stateActions.put(0, Action.createPrimitiveMove(unitID, direction));
         			GameState nextGameState = new GameState(this.parentState);
+        			nextGameState.setXCoordinate(nextXCoordinate);
+        			nextGameState.setYCoordinate(nextYCoordinate);
         			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
         			children.add(nextChild);
-        			
-        			System.out.println(unit.getTemplateView().getName() + unitID + " added a move state in direction " + direction);
         		}
         		else if (archerID != null)
         		{
@@ -164,8 +167,6 @@ public class GameState
         			GameState nextGameState = new GameState(this.parentState);
         			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
         			children.add(nextChild);
-        			
-        			System.out.println(unit.getTemplateView().getName() + unitID + " added an attack state.");
         		}
         	}	
     	}
