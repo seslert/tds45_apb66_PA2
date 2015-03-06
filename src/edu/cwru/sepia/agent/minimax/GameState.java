@@ -35,8 +35,10 @@ public class GameState
 	
 	private List<UnitView> units;
 	
-	private int xPosition = 5;	// The x coordinate of the cell
-	private int yPosition = 5;	// The y coordinate of the cell
+	private int xPosition;	// The x position of the cell
+	private int yPosition;	// The y position of the cell
+	
+	private Map<UnitView, FootmanPosition> footmanPositions = new HashMap<UnitView, FootmanPosition>();	// Map locations to footmen
 
     /**
      * You will implement this constructor. It will
@@ -78,11 +80,15 @@ public class GameState
     		if (unitTypeName.equals("Footman"))
     		{
     			footmanUnitIds.add(unit.getID());
+    			footmanPositions.put(unit, new FootmanPosition(unit.getXPosition(), unit.getYPosition()));
+    			
+    			this.setXPosition(unit.getXPosition());	// TODO: This needs to work for multiple footmen
+    			this.setYPosition(unit.getYPosition());	// TODO: This needs to work for multiple footmen    		
     		}
     		else if (unitTypeName.equals("Archer"))
     		{
     			archerUnitIds.add(unit.getID());
-    		}
+    		}    		
     	}
     }
 
@@ -108,10 +114,8 @@ public class GameState
     {
     	// getDistanceFromArcherUtility() Shorter distance to archer
     	// getCurrentHealthUtility()
-    	// Farther distance from archer - 1.0
-    	UnitView unit = this.parentState.getUnit(0);
-    	
-        return unit.getXPosition() * 2.5;
+    	// Farther distance from archer - 1.0    	    	
+        return (this.getXPosition() * this.getYPosition()) * 2.5;
     }
 
     /**
@@ -138,6 +142,8 @@ public class GameState
     	for (Integer unitID : footmanUnitIds)
     	{    		
     		UnitView unit = this.parentState.getUnit(unitID);
+    		
+    		System.out.println("Footman's position: " + "(" + unit.getXPosition() + ", " + unit.getYPosition() + ")");
     	
     		System.out.println("Getting children for: " + printCoordinates(this));
     		
@@ -166,6 +172,8 @@ public class GameState
         			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
         			stateActions.put(0, Action.createPrimitiveAttack(unitID, archerID));
         			GameState nextGameState = new GameState(this.parentState);
+        			nextGameState.setXPosition(nextXCoordinate);
+        			nextGameState.setYPosition(nextYCoordinate);
         			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
     				children.add(nextChild);
     				
@@ -217,7 +225,7 @@ public class GameState
     		
     		if (Math.abs(archerUnit.getXPosition() - x) <= 1 && Math.abs(archerUnit.getYPosition() - y) <= 1)
     		{
-    			// Can attack
+    			// Can evaluate an attack state
     			return archerID;
     		}
     	}
@@ -252,15 +260,33 @@ public class GameState
     	return new Integer(yPosition);
     }
     
-    // Setter method for x coordinate
+    /**
+     * Setter method for x position
+     * @param xPosition
+     */
     public void setXPosition(int xPosition)
     {
     	this.xPosition = xPosition;
     }
     
-    // Setter method for y coordinate
+    /**
+     * Setter method for y position
+     * @param yPosition
+     */
     public void setYPosition(int yPosition)
     {
     	this.yPosition = yPosition;
+    }
+    
+    private class FootmanPosition
+    {
+    	public int xPosition;
+    	public int yPosition;
+    	
+    	public FootmanPosition(int x, int y)
+    	{
+    		this.xPosition = x;
+    		this.yPosition = y;
+    	}
     }
 }

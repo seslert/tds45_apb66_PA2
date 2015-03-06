@@ -44,7 +44,7 @@ public class MinimaxAlphaBeta extends Agent
                 Double.POSITIVE_INFINITY,
                 true);
         
-        System.out.println(printCoordinates(bestChild.state) + " was chosen");
+        System.out.println(printCoordinates(bestChild.state) + " was chosen.");
         
         //Map<Integer, Action> actions = new HashMap<Integer, Action>();
         
@@ -90,7 +90,7 @@ public class MinimaxAlphaBeta extends Agent
     	// We are at a terminal node
     	if (depth == 0)
     	{
-    		System.out.println(printCoordinates(node.state) + " is the best choice.");
+    		System.out.println("Reached depth 0 " + printCoordinates(node.state) + " is the best choice.");
     		
     		return node; // return best state
     	}
@@ -140,6 +140,9 @@ public class MinimaxAlphaBeta extends Agent
 	    		node = child;
 	    	}
 	    } 
+    	System.out.println(printCoordinates(node.state) + " is the best choice.");
+    	System.out.println("Final Alpha: " + alpha);
+		System.out.println("Final Beta: " + beta);
         return node;
     }
 
