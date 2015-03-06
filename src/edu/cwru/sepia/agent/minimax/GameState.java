@@ -114,8 +114,25 @@ public class GameState
     {
     	// getDistanceFromArcherUtility() Shorter distance to archer
     	// getCurrentHealthUtility()
-    	// Farther distance from archer - 1.0    	    	
-        return (this.getXPosition() * this.getYPosition()) * 2.5;
+    	// Farther distance from archer - 1.0   
+    	Double minDistance = Double.POSITIVE_INFINITY;
+    	for (Map.Entry<UnitView, FootmanPosition> footmanPosition : footmanPositions.entrySet())
+    	{
+    		for (Integer archerID : archerUnitIds)
+        	{
+        		UnitView archerUnit = this.parentState.getUnit(archerID);
+        		
+        		Double distance = Math.sqrt((footmanPosition.getValue().xPosition - archerUnit.getXPosition())^2 - (footmanPosition.getValue().yPosition - archerUnit.getYPosition())^2);
+        		if (distance < minDistance)
+        		{
+        			System.out.println("Footman Pos: (" + footmanPosition.getValue().xPosition + ", " + footmanPosition.getValue().yPosition + "). distance: " + distance);
+        			minDistance = distance;
+        		}
+        	}
+    		
+    	}
+    	
+        return 100 / minDistance;
     }
 
     /**

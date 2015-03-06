@@ -8,6 +8,7 @@ import edu.cwru.sepia.util.Direction;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,7 +162,27 @@ public class MinimaxAlphaBeta extends Agent
      */
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
     {
-        return children;
+    	List<GameStateChild> childList = new ArrayList<GameStateChild>();
+    	for (GameStateChild child : children)
+    	{
+    		System.out.println("(" + child.state.getXPosition() + ", " + child.state.getYPosition() + ") utility: " + child.state.getUtility());
+    		if (childList.size() == 0)
+    		{
+    			childList.add(child);
+    		}
+    		else
+    		{
+    			if (child.state.getUtility() > childList.get(0).state.getUtility())
+    			{
+    				childList.add(0,  child);
+    			}
+    			else
+    			{
+    				childList.add(childList.size(), child);
+    			}
+    		}
+    	}
+        return childList;
     }
     
     /**
