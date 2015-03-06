@@ -107,7 +107,15 @@ public class MinimaxAlphaBeta extends Agent
 	    	{
 	    		System.out.println("Utility of child " + printCoordinates(child.state) + ": " + child.state.getUtility());
 	    		
-	    		v = Math.max(v, alphaBetaSearch(child, depth - 1, alpha, beta, false).state.getUtility());
+	    		GameStateChild tempNode = alphaBetaSearch(child, depth - 1, alpha, beta, false);
+	    		double tempUtility = tempNode.state.getUtility();
+	    		v = Math.max(v, tempUtility);
+	    		
+	    		if (v == tempUtility)
+	    		{
+	    			node = tempNode;
+	    		}
+	    		
 	    		alpha = Math.max(alpha, v);
 	    		
 	    		if (beta <= alpha)
@@ -115,8 +123,9 @@ public class MinimaxAlphaBeta extends Agent
 	    			System.out.println("Beta cutoff at " + printCoordinates(child.state) + ".");        			
         			break;	// Beta cutoff
 	    		}
-	    		node = child;
 	    	}
+	    	
+	    	// Set node to child with v utility
 	    }
 	    
 	    // Evaluate archer's potential moves (MIN)
@@ -130,7 +139,15 @@ public class MinimaxAlphaBeta extends Agent
 	    	{	    		
 	    		System.out.println("Utility of child " + printCoordinates(child.state) + ": " + child.state.getUtility());
 	    		
-	    		v = Math.min(v, alphaBetaSearch(child, depth - 1, alpha, beta, true).state.getUtility());
+	    		GameStateChild tempNode = alphaBetaSearch(child, depth - 1, alpha, beta, true);
+	    		double tempUtility = tempNode.state.getUtility();	    		
+	    		v = Math.min(v, tempUtility);	    			    			    	
+	    		
+	    		if (v == tempUtility)
+	    		{
+	    			node = tempNode;
+	    		}
+	    		
 	    		beta = Math.min(beta, v);
 	    		
 	    		if (beta <= alpha)
@@ -138,7 +155,6 @@ public class MinimaxAlphaBeta extends Agent
 	    			System.out.println("Alpha cutoff at " + printCoordinates(child.state) + ".");
 	    			break;	// Alpha cutoff
 	    		}
-	    		node = child;
 	    	}
 	    } 
     	System.out.println(printCoordinates(node.state) + " is the best choice.");
@@ -165,7 +181,8 @@ public class MinimaxAlphaBeta extends Agent
     	List<GameStateChild> childList = new ArrayList<GameStateChild>();
     	for (GameStateChild child : children)
     	{
-    		System.out.println("(" + child.state.getXPosition() + ", " + child.state.getYPosition() + ") utility: " + child.state.getUtility());
+    		//System.out.println("(" + child.state.getXPosition() + ", " + child.state.getYPosition() + ") utility: " + child.state.getUtility());
+    		
     		if (childList.size() == 0)
     		{
     			childList.add(child);
