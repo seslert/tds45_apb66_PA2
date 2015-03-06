@@ -44,7 +44,7 @@ public class MinimaxAlphaBeta extends Agent
                 Double.POSITIVE_INFINITY,
                 true);
         
-        System.out.println("(" + bestChild.state.getXCoordinate() + ", " + bestChild.state.getYCoordinate() + ") was chosen");
+        System.out.println(printCoordinates(bestChild.state) + " was chosen");
         
         //Map<Integer, Action> actions = new HashMap<Integer, Action>();
         
@@ -80,57 +80,64 @@ public class MinimaxAlphaBeta extends Agent
      */
     public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta, boolean isMaximizer)
     {
-    	List<GameStateChild> children = orderChildrenWithHeuristics(node.state.getChildren());    
-    	
-		System.out.println("Current Depth: " + depth);
+    	System.out.println("\nCurrent Depth: " + depth);
 		System.out.println("Alpha: " + alpha);
 		System.out.println("Beta: " + beta);
+		System.out.println("Node: " + printCoordinates(node.state));
+		
+    	List<GameStateChild> children = orderChildrenWithHeuristics(node.state.getChildren());    
     	
     	// We are at a terminal node
     	if (depth == 0)
     	{
-    		System.out.println("(" + node.state.getXCoordinate() + ", " + node.state.getYCoordinate() + ") " + node.state.getUtility() + " is the best choice.");
+    		System.out.println(printCoordinates(node.state) + " is the best choice.");
     		
     		return node; // return best state
     	}
     	
-    	// Evaluate footman's turn (MAX)
+    	// Evaluate footman's potential move (MAX)
     	if (isMaximizer)
     	{
-    		System.out.println("Maximizing node.");
+    		System.out.println("Maximizing node: " + printCoordinates(node.state) + ".");
 
     		double v = Double.NEGATIVE_INFINITY;
     		
 	    	for (GameStateChild child : children)
 	    	{
+	    		System.out.println("Utility of child " + printCoordinates(child.state) + ": " + child.state.getUtility());
+	    		
 	    		v = Math.max(v, alphaBetaSearch(child, depth - 1, alpha, beta, false).state.getUtility());
 	    		alpha = Math.max(alpha, v);
 	    		
 	    		if (beta <= alpha)
 	    		{
-        			System.out.println(child.toString() + " is the best choice");
-        			
-	    			return child; // Beta cut off
+	    			System.out.println("Beta cutoff at " + printCoordinates(child.state) + ".");        			
+        			break;	// Beta cutoff
 	    		}
+	    		node = child;
 	    	}
 	    }
 	    
-	    // Evaluate archer's turn (MIN)
+	    // Evaluate archer's potential moves (MIN)
 	    else
 	    {
-	    	System.out.println("Minimizing node.");
+	    	System.out.println("Minimizing node: " + printCoordinates(node.state) + ".");
 	    	
 	    	double v = Double.POSITIVE_INFINITY;
 	    			
-	    	for (GameStateChild child : node.state.getChildren())
+	    	for (GameStateChild child : children)
 	    	{	    		
+	    		System.out.println("Utility of child " + printCoordinates(child.state) + ": " + child.state.getUtility());
+	    		
 	    		v = Math.min(v, alphaBetaSearch(child, depth - 1, alpha, beta, true).state.getUtility());
 	    		beta = Math.min(beta, v);
 	    		
 	    		if (beta <= alpha)
 	    		{
-	    			return child; // alpha cut off
+	    			System.out.println("Alpha cutoff at " + printCoordinates(child.state) + ".");
+	    			break;	// Alpha cutoff
 	    		}
+	    		node = child;
 	    	}
 	    } 
         return node;
@@ -152,5 +159,13 @@ public class MinimaxAlphaBeta extends Agent
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
     {
         return children;
+    }
+    
+    /**
+     * Prints the coordinates of a cell given a game state.
+     */
+    private String printCoordinates(GameState gameState)
+    {
+    	return "(" + gameState.getXPosition() + ", " + gameState.getYPosition() + ")";
     }
 }

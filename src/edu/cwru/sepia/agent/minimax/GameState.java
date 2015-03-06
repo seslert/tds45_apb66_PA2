@@ -23,7 +23,6 @@ import java.util.*;
  */
 public class GameState 
 {
-	
 	private final int xExtent;	// The x dimension of the board
 	private final int yExtent;	// The y dimension of the board
 	
@@ -36,8 +35,8 @@ public class GameState
 	
 	private List<UnitView> units;
 	
-	private int xCoordinate;	// The x coordinate of the cell
-	private int yCoordinate;	// The y coordinate of the cell
+	private int xPosition = 5;	// The x coordinate of the cell
+	private int yPosition = 5;	// The y coordinate of the cell
 
     /**
      * You will implement this constructor. It will
@@ -61,7 +60,7 @@ public class GameState
      * @param state Current state of the episode
      */
     public GameState(State.StateView state) 
-    {	
+    { 	
     	this.xExtent = state.getXExtent();
     	this.yExtent = state.getYExtent();
     	this.resourceIds = state.getAllResourceIds();
@@ -139,36 +138,38 @@ public class GameState
     	for (Integer unitID : footmanUnitIds)
     	{    		
     		UnitView unit = this.parentState.getUnit(unitID);
-    		this.setXCoordinate(unit.getXPosition());
-    		this.setYCoordinate(unit.getYPosition());
-    		
-    		System.out.println(unit.getTemplateView().getName() + unitID + " is checking available states...");
+    	
+    		System.out.println("Getting children for: " + printCoordinates(this));
     		
         	for (Direction direction : getCardinal())
         	{ 
-        		Integer archerID = getArcherInRange(unit.getXPosition(), unit.getYPosition());
+        		Integer archerID = getArcherInRange(unit.getXPosition(), unit.getYPosition());        
+        		int nextXCoordinate = this.getXPosition() + direction.xComponent();
+        		int nextYCoordinate = this.getYPosition() + direction.yComponent();
         		
         		// The resulting move is still inbounds
-        		int nextXCoordinate = unit.getXPosition() + direction.xComponent();
-        		int nextYCoordinate = unit.getYPosition() + direction.yComponent();
-        		
         		if (inBounds(nextXCoordinate, nextYCoordinate))
         		{        			
         			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
         			stateActions.put(0, Action.createPrimitiveMove(unitID, direction));
         			GameState nextGameState = new GameState(this.parentState);
-        			nextGameState.setXCoordinate(nextXCoordinate);
-        			nextGameState.setYCoordinate(nextYCoordinate);
-        			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
-        			children.add(nextChild);
+        			nextGameState.setXPosition(nextXCoordinate);
+        			nextGameState.setYPosition(nextYCoordinate);
+        			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);        			                			    			
+    				children.add(nextChild);
+    				
+    				System.out.println("Added move child state: " + printCoordinates(nextGameState));        			
         		}
+        		// See if an archer is in range of attack
         		else if (archerID != null)
         		{
         			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
         			stateActions.put(0, Action.createPrimitiveAttack(unitID, archerID));
         			GameState nextGameState = new GameState(this.parentState);
         			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
-        			children.add(nextChild);
+    				children.add(nextChild);
+    				
+    				System.out.println("Added attack child state: " + printCoordinates(nextGameState));        			
         		}
         	}	
     	}
@@ -176,24 +177,38 @@ public class GameState
         return children;
     }
     
+    /**
+     * Get the cardinal directions for footman movement
+     * @return
+     */
     private Direction[] getCardinal()
     {
     	Direction[] cardinalDirections = new Direction[4];
-    	cardinalDirections[0] = Direction.valueOf("NORTH");
-    	cardinalDirections[1] = Direction.valueOf("SOUTH");
-    	cardinalDirections[2] = Direction.valueOf("EAST");
-    	cardinalDirections[3] = Direction.valueOf("WEST");    
+    	cardinalDirections[0] = Direction.NORTH;
+    	cardinalDirections[1] = Direction.SOUTH;
+    	cardinalDirections[2] = Direction.EAST;
+    	cardinalDirections[3] = Direction.WEST;    
     	
     	return cardinalDirections;
     }
     
-    // Check if the position is on the board
+    /**
+     * Check if the position is on the board
+     * @param x
+     * @param y
+     * @return
+     */
     private boolean inBounds(int x, int y)
     {
     	return !(x > this.xExtent || y > this.yExtent || x < 0 || y < 0);    	
     }
     
-    // Check if there is an archer that we can attack
+    /**
+     * Check if there is an archer that the footman can attack given its coordinates
+     * @param x
+     * @param y
+     * @return
+     */
     private Integer getArcherInRange(int x, int y)
     {
     	for (Integer archerID : archerUnitIds)
@@ -209,27 +224,43 @@ public class GameState
     	return null;
     }
     
-    // Getter method for x coordinate
-    public int getXCoordinate()
+    /**
+     * Prints the coordinates of the footman's cell location in a given GameState
+     * @param gameState
+     * @return
+     */
+    private String printCoordinates(GameState gameState)
     {
-    	return new Integer(xCoordinate);
+    	return "(" + gameState.getXPosition() + ", " + gameState.getYPosition() + ")";
     }
     
-    // Getter method for y coordinate
-    public int getYCoordinate()
+    /**
+     * 
+     * @return
+     */
+    public int getXPosition()
     {
-    	return new Integer(yCoordinate);
+    	return new Integer(xPosition);
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public int getYPosition()
+    {
+    	return new Integer(yPosition);
     }
     
     // Setter method for x coordinate
-    public void setXCoordinate(int xCoordinate)
+    public void setXPosition(int xPosition)
     {
-    	this.xCoordinate = xCoordinate;
+    	this.xPosition = xPosition;
     }
     
     // Setter method for y coordinate
-    public void setYCoordinate(int yCoordinate)
+    public void setYPosition(int yPosition)
     {
-    	this.yCoordinate = yCoordinate;
+    	this.yPosition = yPosition;
     }
 }
