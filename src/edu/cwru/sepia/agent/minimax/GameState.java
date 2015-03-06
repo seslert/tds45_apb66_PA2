@@ -92,8 +92,8 @@ public class GameState
     			footmanUnitIds.add(unit.getID());
     			footmanPositions.put(unit, new FootmanPosition(unit.getXPosition(), unit.getYPosition()));
     			
-    			this.setXPosition(unit.getXPosition());	// TODO: This needs to work for multiple footmen
-    			this.setYPosition(unit.getYPosition());	// TODO: This needs to work for multiple footmen    		
+    			//this.setXPosition(unit.getXPosition());	// TODO: This needs to work for multiple footmen
+    			//this.setYPosition(unit.getYPosition());	// TODO: This needs to work for multiple footmen    		
     		}
     		else if (unitTypeName.equals("Archer"))
     		{
@@ -103,7 +103,7 @@ public class GameState
     	
     	if (isInitial)
     	{
-    		this.calculateUtility(getXPosition(), getYPosition());
+    		this.calculateUtility();
     	}
     }
 
@@ -130,27 +130,34 @@ public class GameState
     	return this.utility;
     }
     
-    public void calculateUtility(int xPosition, int yPosition)
+    public void calculateUtility()
     {
-    	Double minDistance = Double.POSITIVE_INFINITY;
+    	Double minDistance = 0.0;
     	
     	for (UnitView footman : footmanPositions.keySet())
     	{
+    		Double individualMinDistance = Double.POSITIVE_INFINITY;
+    		
     		for (Integer archerID : archerUnitIds)
         	{
         		UnitView archerUnit = this.parentState.getUnit(archerID);        		
-        		Double distance = Math.sqrt(Math.abs((Math.pow((xPosition - archerUnit.getXPosition()), 2)) - (Math.pow((yPosition - archerUnit.getYPosition()), 2))));        		
+        		Double distance = Math.sqrt(Math.abs((Math.pow((footmanPositions.get(footman).xPosition - archerUnit.getXPosition()), 2)) - (Math.pow((footmanPositions.get(footman).yPosition - archerUnit.getYPosition()), 2))));        		
         		//System.out.println("X: " + Math.pow((xPosition - archerUnit.getXPosition()), 2) + " Y: " + Math.pow((yPosition - archerUnit.getYPosition()), 2));
         		//System.out.println("Distance: " + distance);
+        		System.out.println("Calculated distance: " + distance);
         		
-        		if (distance < minDistance)
-        		{
-        			System.out.println("Footman " + footman.getID() + " Pos: (" + xPosition + ", " + yPosition + "). Distance from archer: " + distance);
-        			minDistance = distance;
-        		}
+        		
+        		if (distance < individualMinDistance)
+        		{        			        			
+        			individualMinDistance = distance;
+        		}        		
         	}
+    		minDistance += individualMinDistance;
+    		
+    		System.out.println("Current min distance: " + minDistance);
     	}
-    	this.utility = 100 / minDistance;
+    	System.out.println("Final min distance: " + minDistance);
+    	this.utility = 100 / (minDistance / footmanPositions.size());
     }
 
     /**
@@ -178,24 +185,30 @@ public class GameState
     	{    		
     		UnitView unit = this.parentState.getUnit(unitID);
     		
-    		System.out.println("Footman " + unitID + " position: " + "(" + unit.getXPosition() + ", " + unit.getYPosition() + ")");
-    	
-    		System.out.println("Getting children for: " + printCoordinates(this));
+    		System.out.println("Footman " + unitID + " position: " + printCoordinates(unit));
+    		System.out.println("Getting children for node: " + printCoordinates(this));
     		
+    		// Look in directions NORTH, SOUTH, EAST, and WEST
         	for (Direction direction : getCardinal())
         	{ 
         		Integer archerID = getArcherInRange(unit.getXPosition(), unit.getYPosition());        
-        		int nextXCoordinate = this.getXPosition() + direction.xComponent();
-        		int nextYCoordinate = this.getYPosition() + direction.yComponent();
+        		//int nextFootmanXPosition = this.getXPosition() + direction.xComponent();
+        		//int nextFootmanYPosition = this.getYPosition() + direction.yComponent();
+        		
+        		int nextFootmanXPosition = footmanPositions.get(unit).xPosition + direction.xComponent();
+        		int nextFootmanYPosition = footmanPositions.get(unit).yPosition + direction.yComponent();
         		
         		// See if an archer is in range to attack
-        		if (archerID != null && inBounds(nextXCoordinate, nextYCoordinate))
+        		if (archerID != null && inBounds(nextFootmanXPosition, nextFootmanYPosition))
         		{
         			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
         			stateActions.put(0, Action.createPrimitiveAttack(unitID, archerID));
         			GameState nextGameState = new GameState(this.parentState, false);
-        			nextGameState.setXPosition(nextXCoordinate);
-        			nextGameState.setYPosition(nextYCoordinate);
+        			//nextGameState.setXPosition(nextFootmanXPosition);
+        			//nextGameState.setYPosition(nextFootmanYPosition);
+        			nextGameState.footmanPositions.remove(unit);
+        			nextGameState.footmanPositions.put(unit, new FootmanPosition(nextFootmanXPosition, nextFootmanYPosition));
+        			
         			nextGameState.utility = Double.POSITIVE_INFINITY;
         			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
     				children.add(nextChild);
@@ -203,14 +216,21 @@ public class GameState
     				System.out.println("Added attack child state: " + printCoordinates(nextGameState));        			
         		}
         		// The resulting move is still inbounds
-        		else if (inBounds(nextXCoordinate, nextYCoordinate))
+        		else if (inBounds(nextFootmanXPosition, nextFootmanYPosition))
         		{        			
         			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
         			stateActions.put(0, Action.createPrimitiveMove(unitID, direction));
         			GameState nextGameState = new GameState(this.parentState, false);
-        			nextGameState.setXPosition(nextXCoordinate);
-        			nextGameState.setYPosition(nextYCoordinate);
-        			nextGameState.calculateUtility(nextXCoordinate, nextYCoordinate);        			// Calculate utility of state
+        			//nextGameState.setXPosition(nextXCoordinate);
+        			//nextGameState.setYPosition(nextYCoordinate);
+        			nextGameState.footmanPositions.remove(unit);
+        			nextGameState.footmanPositions.put(unit, new FootmanPosition(nextFootmanXPosition, nextFootmanYPosition));
+        			
+        			System.out.println("Next footman position: (" + nextGameState.footmanPositions.get(unit).xPosition + ", " + nextGameState.footmanPositions.get(unit).yPosition + ")");
+        			
+        			
+        			//nextGameState.calculateUtility(nextFootmanXPosition, nextFootmanYPosition);        			// Calculate utility of state
+        			nextGameState.calculateUtility();        			// Calculate utility of state
         			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);        			                			    			
     				children.add(nextChild);
     				    				
@@ -220,6 +240,28 @@ public class GameState
     	}
     	
         return children;
+    }
+    
+    /**
+     * 
+     * @param actions
+     * @param state
+     * @return
+     */
+    private GameStateChild generateGameStateChild(HashMap<Integer, Action> actions, GameState state)
+    {
+    	return new GameStateChild(actions, state);
+    }
+    
+    /**
+     * 
+     * @param state
+     * @param isInitial
+     * @return
+     */
+    private GameState generateGameState(State.StateView state, boolean isInitial)
+    {
+    	return new GameState(state, isInitial);
     }
     
     /**
@@ -238,7 +280,7 @@ public class GameState
     }
     
     /**
-     * Check if the position is on the board
+     * Check if the position after a potential move/attack is still on the board
      * @param x
      * @param y
      * @return
@@ -277,6 +319,20 @@ public class GameState
     private String printCoordinates(GameState gameState)
     {
     	return "(" + gameState.getXPosition() + ", " + gameState.getYPosition() + ")";
+    }
+    
+    private String printCoordinates(UnitView unit) 
+    {
+    	return "(" + unit.getXPosition() + ", " + unit.getYPosition() + ")";
+    }
+    
+    public String getFootmanCoordinates()
+    {
+    	for (UnitView footman : footmanPositions.keySet())
+    	{
+    		return new String("Footman " + footman.getID() + ": " + printCoordinates(footman));
+    	}
+    	return new String();
     }
     
     /**

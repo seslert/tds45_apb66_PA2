@@ -45,7 +45,7 @@ public class MinimaxAlphaBeta extends Agent
                 Double.POSITIVE_INFINITY,
                 true);
         
-        System.out.println(printCoordinates(bestChild.state) + " was chosen.");
+        System.out.println(bestChild.state.getFootmanCoordinates() + " was chosen.");
         
         //Map<Integer, Action> actions = new HashMap<Integer, Action>();
         
@@ -81,17 +81,18 @@ public class MinimaxAlphaBeta extends Agent
      */
     public GameStateChild alphaBetaSearch(GameStateChild node, int depth, double alpha, double beta, boolean isMaximizer)
     {
-    	System.out.println("\nCurrent Depth: " + depth);
+    	System.out.println("\nStarting Alpha-Beta...");
+    	System.out.println("Current Depth: " + depth);
 		System.out.println("Alpha: " + alpha);
 		System.out.println("Beta: " + beta);
-		System.out.println("Node: " + printCoordinates(node.state));
+		System.out.println(node.state.getFootmanCoordinates());
 		
     	List<GameStateChild> children = orderChildrenWithHeuristics(node.state.getChildren());    
     	
     	// We are at a terminal node
     	if (depth == 0)
     	{
-    		System.out.println("Reached depth 0 " + printCoordinates(node.state) + " is the best choice.");
+    		System.out.println("Reached depth 0: " + node.state.getFootmanCoordinates() + " is the best choice.");
     		
     		return node; // return best state
     	}
@@ -115,7 +116,6 @@ public class MinimaxAlphaBeta extends Agent
 	    		{
 	    			node = tempNode;
 	    		}
-	    		
 	    		alpha = Math.max(alpha, v);
 	    		
 	    		if (beta <= alpha)
@@ -147,7 +147,6 @@ public class MinimaxAlphaBeta extends Agent
 	    		{
 	    			node = tempNode;
 	    		}
-	    		
 	    		beta = Math.min(beta, v);
 	    		
 	    		if (beta <= alpha)
