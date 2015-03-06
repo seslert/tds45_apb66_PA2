@@ -4,8 +4,8 @@
         <ID>0</ID>
         <unit>
             <ID>0</ID>
-            <currentHealth>132</currentHealth>
-            <xPosition>23</xPosition>
+            <currentHealth>129</currentHealth>
+            <xPosition>1</xPosition>
             <yPosition>1</yPosition>
             <templateID>25</templateID>
             <cargoAmount>0</cargoAmount>

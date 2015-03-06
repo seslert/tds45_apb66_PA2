@@ -134,7 +134,7 @@ public class GameState
     {
     	Double minDistance = Double.POSITIVE_INFINITY;
     	
-    	for (Map.Entry<UnitView, FootmanPosition> footmanPosition : footmanPositions.entrySet())
+    	for (UnitView footman : footmanPositions.keySet())
     	{
     		for (Integer archerID : archerUnitIds)
         	{
@@ -145,7 +145,7 @@ public class GameState
         		
         		if (distance < minDistance)
         		{
-        			System.out.println("Footman Pos: (" + xPosition + ", " + yPosition + "). Distance from archer: " + distance);
+        			System.out.println("Footman " + footman.getID() + " Pos: (" + xPosition + ", " + yPosition + "). Distance from archer: " + distance);
         			minDistance = distance;
         		}
         	}
