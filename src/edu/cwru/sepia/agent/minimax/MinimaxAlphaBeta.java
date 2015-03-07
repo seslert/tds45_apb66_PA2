@@ -48,12 +48,12 @@ public class MinimaxAlphaBeta extends Agent
                 true);
         
         System.out.println(bestChild.state.getFootmanCoordinates() + " was chosen for the action.");
-        System.out.println("Action to perform: " + bestChild.action.get(0));
+        //System.out.println("Action to perform: " + bestChild.action.get(0));
         
         Map<Integer, Action> actions = new HashMap<Integer, Action>();
         
-        //actions.put(0, Action.createPrimitiveMove(0, Direction.SOUTH));
-        actions.put(1, Action.createPrimitiveMove(1, Direction.SOUTH));
+        actions.put(0, Action.createPrimitiveMove(0, Direction.SOUTH));
+        //actions.put(1, Action.createPrimitiveMove(1, Direction.SOUTH));
         
         System.out.println("Action from hard code: " + actions.get(1));
         //return actions;
