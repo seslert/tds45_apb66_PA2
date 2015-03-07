@@ -140,11 +140,16 @@ public class GameState
     		
     		for (Integer archerID : archerUnitIds)
         	{
-        		UnitView archerUnit = this.parentState.getUnit(archerID);        		
-        		Double distance = Math.sqrt(Math.abs((Math.pow((footmanPositions.get(footman).xPosition - archerUnit.getXPosition()), 2)) - (Math.pow((footmanPositions.get(footman).yPosition - archerUnit.getYPosition()), 2))));        		
+        		UnitView archerUnit = this.parentState.getUnit(archerID);
+        		
+        		//System.out.println("Footman " + footman.getID() + " at start of distance calculation: (" + footmanPositions.get(footman).xPosition + ", " + footmanPositions.get(footman).yPosition + ")");
+        		//System.out.println("Archer " + archerID + " at start of distance calculation: (" + archerUnit.getXPosition() + ", " + archerUnit.getYPosition() + ")");
+        		
+        		
+        		Double distance = Math.sqrt(Math.abs((Math.pow((footmanPositions.get(footman).xPosition - archerUnit.getXPosition()), 2)) + (Math.pow((footmanPositions.get(footman).yPosition - archerUnit.getYPosition()), 2))));        		
         		//System.out.println("X: " + Math.pow((xPosition - archerUnit.getXPosition()), 2) + " Y: " + Math.pow((yPosition - archerUnit.getYPosition()), 2));
         		//System.out.println("Distance: " + distance);
-        		System.out.println("Calculated distance: " + distance);
+        		//System.out.println("Calculated distance: " + distance);
         		
         		
         		if (distance < individualMinDistance)
@@ -154,9 +159,9 @@ public class GameState
         	}
     		minDistance += individualMinDistance;
     		
-    		System.out.println("Current min distance: " + minDistance);
+    		//System.out.println("Current min distance: " + minDistance);
     	}
-    	System.out.println("Final min distance: " + minDistance);
+    	//System.out.println("Final min distance: " + minDistance);
     	this.utility = 100 / (minDistance / footmanPositions.size());
     }
 
@@ -185,16 +190,13 @@ public class GameState
     	{    		
     		UnitView unit = this.parentState.getUnit(unitID);
     		
-    		System.out.println("Footman " + unitID + " position: " + printCoordinates(unit));
-    		System.out.println("Getting children for node: " + printCoordinates(this));
+    		// System.out.println("Footman " + unitID + " position: " + printCoordinates(unit));
+    		//System.out.println("Getting children for node: " + printCoordinates(unit));
     		
     		// Look in directions NORTH, SOUTH, EAST, and WEST
         	for (Direction direction : getCardinal())
         	{ 
         		Integer archerID = getArcherInRange(unit.getXPosition(), unit.getYPosition());        
-        		//int nextFootmanXPosition = this.getXPosition() + direction.xComponent();
-        		//int nextFootmanYPosition = this.getYPosition() + direction.yComponent();
-        		
         		int nextFootmanXPosition;
         		int nextFootmanYPosition;
         		
@@ -209,8 +211,6 @@ public class GameState
 	        			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
 	        			stateActions.put(0, Action.createPrimitiveAttack(unitID, archerID));
 	        			GameState nextGameState = new GameState(this.parentState, false);
-	        			//nextGameState.setXPosition(nextFootmanXPosition);
-	        			//nextGameState.setYPosition(nextFootmanYPosition);
 	        			nextGameState.footmanPositions.remove(unit);
 	        			nextGameState.footmanPositions.put(unit, new FootmanPosition(nextFootmanXPosition, nextFootmanYPosition));
 	        			
@@ -218,7 +218,7 @@ public class GameState
 	        			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
 	    				children.add(nextChild);
 	    				
-	    				System.out.println("Added attack child state: " + printCoordinates(nextGameState));        			
+	    				//System.out.println("Added attack child state: (" + nextGameState.footmanPositions.get(unit).xPosition + ", " + nextGameState.footmanPositions.get(unit).yPosition + ")" + " Utility " + nextGameState.getUtility());        			
 	        		}
 	        		// The resulting move is still inbounds
 	        		else if (inBounds(nextFootmanXPosition, nextFootmanYPosition))
@@ -226,12 +226,10 @@ public class GameState
 	        			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
 	        			stateActions.put(0, Action.createPrimitiveMove(unitID, direction));
 	        			GameState nextGameState = new GameState(this.parentState, false);
-	        			//nextGameState.setXPosition(nextXCoordinate);
-	        			//nextGameState.setYPosition(nextYCoordinate);
 	        			nextGameState.footmanPositions.remove(unit);
 	        			nextGameState.footmanPositions.put(unit, new FootmanPosition(nextFootmanXPosition, nextFootmanYPosition));
 	        			
-	        			System.out.println("Next footman position: (" + nextGameState.footmanPositions.get(unit).xPosition + ", " + nextGameState.footmanPositions.get(unit).yPosition + ")");
+	        			//System.out.println("Next footman node to evaluate: (" + nextGameState.footmanPositions.get(unit).xPosition + ", " + nextGameState.footmanPositions.get(unit).yPosition + ")");
 	        			
 	        			
 	        			//nextGameState.calculateUtility(nextFootmanXPosition, nextFootmanYPosition);        			// Calculate utility of state
@@ -239,7 +237,7 @@ public class GameState
 	        			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);        			                			    			
 	    				children.add(nextChild);
 	    				    				
-	    				System.out.println("Added move child state: " + printCoordinates(nextGameState) + " Utility " + nextGameState.getUtility());        			
+	    				//System.out.println("Added move child state: (" + nextGameState.footmanPositions.get(unit).xPosition + ", " + nextGameState.footmanPositions.get(unit).yPosition + ")" + " Utility: " + nextGameState.getUtility());        			
 	        		}        	
         		}
         	}	
@@ -329,16 +327,18 @@ public class GameState
     
     private String printCoordinates(UnitView unit) 
     {
-    	return "(" + unit.getXPosition() + ", " + unit.getYPosition() + ")";
+    	return "(" + footmanPositions.get(unit).xPosition + ", " + footmanPositions.get(unit).yPosition + ")";
     }
+    
     
     public String getFootmanCoordinates()
     {
+    	StringBuilder footmanCoordinates = new StringBuilder();
     	for (UnitView footman : footmanPositions.keySet())
     	{
-    		return new String("Footman " + footman.getID() + ": " + printCoordinates(footman));
+    		footmanCoordinates.append("Footman " + footman.getID() + " is at node: (" + footmanPositions.get(footman).xPosition + ", " + footmanPositions.get(footman).yPosition + "), ");
     	}
-    	return new String();
+    	return footmanCoordinates.toString();
     }
     
     /**
