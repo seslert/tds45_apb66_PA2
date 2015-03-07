@@ -45,7 +45,7 @@ public class MinimaxAlphaBeta extends Agent
                 Double.POSITIVE_INFINITY,
                 true);
         
-        System.out.println(bestChild.state.getFootmanCoordinates() + " was chosen.");
+        System.out.println(bestChild.state.getFootmanCoordinates() + " was chosen for the action.");
         
         //Map<Integer, Action> actions = new HashMap<Integer, Action>();
         
@@ -100,13 +100,13 @@ public class MinimaxAlphaBeta extends Agent
     	// Evaluate footman's potential move (MAX)
     	if (isMaximizer)
     	{
-    		System.out.println("Maximizing node: " + printCoordinates(node.state) + ".");
+    		System.out.println("Maximizing node: " + node.state.getFootmanCoordinates() + ".");
 
     		double v = Double.NEGATIVE_INFINITY;
     		
 	    	for (GameStateChild child : children)
 	    	{
-	    		System.out.println("Utility of child " + printCoordinates(child.state) + ": " + child.state.getUtility());
+	    		System.out.println("Utility of child " + child.state.getFootmanCoordinates() + ": " + child.state.getUtility());
 	    		
 	    		GameStateChild tempNode = alphaBetaSearch(child, depth - 1, alpha, beta, false);
 	    		double tempUtility = tempNode.state.getUtility();
@@ -120,7 +120,7 @@ public class MinimaxAlphaBeta extends Agent
 	    		
 	    		if (beta <= alpha)
 	    		{
-	    			System.out.println("Beta cutoff at " + printCoordinates(child.state) + ".");        			
+	    			System.out.println("Beta cutoff at " + child.state.getFootmanCoordinates() + ".");        			
         			break;	// Beta cutoff
 	    		}
 	    	}
@@ -131,13 +131,13 @@ public class MinimaxAlphaBeta extends Agent
 	    // Evaluate archer's potential moves (MIN)
 	    else
 	    {
-	    	System.out.println("Minimizing node: " + printCoordinates(node.state) + ".");
+	    	System.out.println("Minimizing node: " + node.state.getFootmanCoordinates() + ".");
 	    	
 	    	double v = Double.POSITIVE_INFINITY;
 	    			
 	    	for (GameStateChild child : children)
 	    	{	    		
-	    		System.out.println("Utility of child " + printCoordinates(child.state) + ": " + child.state.getUtility());
+	    		System.out.println("Utility of child " + child.state.getFootmanCoordinates() + ": " + child.state.getUtility());
 	    		
 	    		GameStateChild tempNode = alphaBetaSearch(child, depth - 1, alpha, beta, true);
 	    		double tempUtility = tempNode.state.getUtility();	    		
@@ -151,12 +151,12 @@ public class MinimaxAlphaBeta extends Agent
 	    		
 	    		if (beta <= alpha)
 	    		{
-	    			System.out.println("Alpha cutoff at " + printCoordinates(child.state) + ".");
+	    			System.out.println("Alpha cutoff at " + child.state.getFootmanCoordinates() + ".");
 	    			break;	// Alpha cutoff
 	    		}
 	    	}
 	    } 
-    	System.out.println(printCoordinates(node.state) + " is the best choice.");
+    	System.out.println(node.state.getFootmanCoordinates() + " is the best choice.");
     	System.out.println("Final Alpha: " + alpha);
 		System.out.println("Final Beta: " + beta);
         return node;
