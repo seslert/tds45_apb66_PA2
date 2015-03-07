@@ -177,28 +177,35 @@ public class MinimaxAlphaBeta extends Agent
      */
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
     {
-    	List<GameStateChild> childList = new ArrayList<GameStateChild>();
-    	for (GameStateChild child : children)
+    	List<GameStateChild> returnList = new ArrayList<GameStateChild>();
+    	for (GameStateChild considerChild : children)
     	{
     		//System.out.println("(" + child.state.getXPosition() + ", " + child.state.getYPosition() + ") utility: " + child.state.getUtility());
     		
-    		if (childList.size() == 0)
+    		if (returnList.size() == 0)
     		{
-    			childList.add(child);
+    			returnList.add(considerChild);
     		}
     		else
     		{
-    			if (child.state.getUtility() > childList.get(0).state.getUtility())
+    			boolean placed = false;
+    			int index = 0;
+    			while (!placed || index < returnList.size())
     			{
-    				childList.add(0,  child);
+    				if (considerChild.state.getUtility() > returnList.get(index).state.getUtility())
+        			{
+        				returnList.add(index, considerChild);
+        				placed = true;
+        			}
+    				index++;
     			}
-    			else
+    			if (!placed)
     			{
-    				childList.add(childList.size(), child);
+    				returnList.add(returnList.size(), considerChild);
     			}
     		}
     	}
-        return childList;
+        return returnList;
     }
     
     /**
