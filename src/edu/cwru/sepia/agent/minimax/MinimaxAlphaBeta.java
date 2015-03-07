@@ -39,24 +39,13 @@ public class MinimaxAlphaBeta extends Agent
     @Override
     public Map<Integer, Action> middleStep(State.StateView newstate, History.HistoryView statehistory) 
     {
-    	System.out.println("==> Starting middle step...");
-    	
         GameStateChild bestChild = alphaBetaSearch(new GameStateChild(newstate),
                 numPlys,
                 Double.NEGATIVE_INFINITY,
                 Double.POSITIVE_INFINITY,
                 true);
         
-        System.out.println(bestChild.state.getFootmanCoordinates() + " was chosen for the action.");
-        //System.out.println("Action to perform: " + bestChild.action.get(0));
-        
-        Map<Integer, Action> actions = new HashMap<Integer, Action>();
-        
-        actions.put(0, Action.createPrimitiveMove(0, Direction.SOUTH));
-        //actions.put(1, Action.createPrimitiveMove(1, Direction.SOUTH));
-        
-        System.out.println("Action from hard code: " + actions.get(1));
-        //return actions;
+        System.out.println(bestChild.state.getFootmanCoordinates() + " was chosen for the action.");     
         return bestChild.action;     
     }
 
@@ -97,12 +86,11 @@ public class MinimaxAlphaBeta extends Agent
     	// We are at a terminal node
     	if (depth == 0)
     	{
-    		System.out.println("Reached depth 0: " + node.state.getFootmanCoordinates() + " is the best choice.");
-    		
+    		System.out.println("Reached depth 0: " + node.state.getFootmanCoordinates() + " is the best choice.");    		
     		return node; // return best state
     	}
     	
-    	// Evaluate footman's potential move (MAX)
+    	// Evaluate maximizing states
     	if (isMaximizer)
     	{
     		System.out.println("Maximizing node: " + node.state.getFootmanCoordinates());
@@ -111,17 +99,13 @@ public class MinimaxAlphaBeta extends Agent
     		
 	    	for (GameStateChild child : children)
 	    	{
-	    		System.out.println("Child of " + node.state.getFootmanCoordinates() + " " + child.state.getFootmanCoordinates() + " with utility: " + child.state.getUtility() + " being recursed into.");
-	    		
 	    		GameStateChild tempNode = alphaBetaSearch(child, depth - 1, alpha, beta, false);
 	    		double tempUtility = tempNode.state.getUtility();
-	    		v = Math.max(v, tempUtility);
+	    		v = Math.max(v, tempUtility);	    		
 	    		
-	    		System.out.println("v: " + v + ", tempUtility: " + tempUtility);
-	    		
+		    	// Set node to child with v utility
 	    		if (v == tempUtility)
 	    		{
-	    			System.out.println("Setting " + tempNode.state.getFootmanCoordinates() + "to node.");
 	    			node = tempNode;
 	    		}
 	    		alpha = Math.max(alpha, v);
@@ -131,12 +115,10 @@ public class MinimaxAlphaBeta extends Agent
 	    			System.out.println("Beta cutoff: " + child.state.getFootmanCoordinates());        			
         			break;	// Beta cutoff
 	    		}
-	    	}
-	    	
-	    	// Set node to child with v utility
+	    	}	    
 	    } 
 	    
-	    // Evaluate archer's potential moves (MIN)
+	    // Evaluate minimizing states
 	    else
 	    {
 	    	System.out.println("Minimizing node: " + node.state.getFootmanCoordinates() + ".");
@@ -144,16 +126,14 @@ public class MinimaxAlphaBeta extends Agent
 	    	double v = Double.POSITIVE_INFINITY;
 	    			
 	    	for (GameStateChild child : children)
-	    	{	    		
-	    		System.out.println(child.state.getFootmanCoordinates() + " with utility: " + child.state.getUtility());
-	    		
+	    	{	
 	    		GameStateChild tempNode = alphaBetaSearch(child, depth - 1, alpha, beta, true);
 	    		double tempUtility = tempNode.state.getUtility();	    		
 	    		v = Math.min(v, tempUtility);	    			    			    	
 	    		
+		    	// Set node to child with v utility
 	    		if (v == tempUtility)
-	    		{
-	    			System.out.println("Setting " + tempNode.state.getFootmanCoordinates() + "to node.");
+	    		{	    			
 	    			node = tempNode;
 	    		}
 	    		beta = Math.min(beta, v);
@@ -187,10 +167,11 @@ public class MinimaxAlphaBeta extends Agent
     public List<GameStateChild> orderChildrenWithHeuristics(List<GameStateChild> children)
     {
     	List<GameStateChild> returnList = new ArrayList<GameStateChild>();
+    	
+    	// Sort the children by their utility.  We want to examine children with high utility first.
+    	// This was our first choice of heuristic and it never really matured beyond this...
     	for (GameStateChild considerChild : children)
-    	{
-    		//System.out.println("(" + child.state.getXPosition() + ", " + child.state.getYPosition() + ") utility: " + child.state.getUtility());
-    		
+    	{	
     		if (returnList.size() == 0)
     		{
     			returnList.add(considerChild);
@@ -215,13 +196,5 @@ public class MinimaxAlphaBeta extends Agent
     		}
     	}
         return returnList;
-    }
-    
-    /**
-     * Prints the coordinates of a cell given a game state.
-     */
-    private String printCoordinates(GameState gameState)
-    {
-    	return "(" + gameState.getXPosition() + ", " + gameState.getYPosition() + ")";
     }
 }

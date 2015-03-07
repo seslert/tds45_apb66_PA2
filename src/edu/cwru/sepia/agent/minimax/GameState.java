@@ -20,25 +20,20 @@ import java.util.*;
  *
  * Add any information or methods you would like to this class,
  * but do not delete or change the signatures of the provided methods.
+ * 
+ * @author Tim Sesler
+ * @author Adam Boe
  */
 public class GameState 
 {
 	private final int xExtent;	// The x dimension of the board
 	private final int yExtent;	// The y dimension of the board
-	
 	private final List<Integer> resourceIds;	// The list of resource IDs in the game
-	
-	private StateView parentState;
-	
-	private List<Integer> footmanUnitIds;
-	private List<Integer> archerUnitIds;
-	
-	private List<UnitView> units;
-	
-	private int xPosition;	// The x position of the cell
-	private int yPosition;	// The y position of the cell
-	
-	private Double utility;
+	private StateView parentState;	// The state view from which this game state was created
+	private List<Integer> footmanUnitIds;	// The ids of all footmen in the game
+	private List<Integer> archerUnitIds;	// The ids of all archers in the game
+	private List<UnitView> units;	// The list of all units in the game
+	private Double utility;	// The utility of the game state
 	
 	private Map<UnitView, FootmanPosition> footmanPositions = new HashMap<UnitView, FootmanPosition>();	// Map locations to footmen
 
@@ -69,7 +64,7 @@ public class GameState
     }
     
     /**
-     * 
+     * An additional constructor that will perform certain functions if we are creating the initial game state.
      */
     public GameState(State.StateView state, boolean isInitial)
     {
@@ -83,6 +78,7 @@ public class GameState
     	footmanUnitIds = new ArrayList<Integer>();
     	archerUnitIds = new ArrayList<Integer>();
     	
+    	// Find all of the units in the game and add them to the appropriate list.
     	for (UnitView unit : this.units)
     	{
     		String unitTypeName = unit.getTemplateView().getName();
@@ -98,6 +94,7 @@ public class GameState
     		}    		
     	}
     	
+    	// If it is the initial state then we need to calculate the utility.
     	if (isInitial)
     	{
     		this.calculateUtility();
@@ -127,10 +124,14 @@ public class GameState
     	return this.utility;
     }
     
+    /**
+     * Calculate the utility of a state based on the positions of the footmen relative to the archers.
+     */
     public void calculateUtility()
     {
     	Double minDistance = 0.0;
     	
+    	// For every footman, find the minimum distance to any archer.
     	for (UnitView footman : footmanPositions.keySet())
     	{
     		Double individualMinDistance = Double.POSITIVE_INFINITY;
@@ -147,6 +148,8 @@ public class GameState
         	}
     		minDistance += individualMinDistance;
     	}
+    	// Average the minimum distance and invert it to get a utility.
+    	// This way, low minimum distance has high utility. 
     	this.utility = 100 / (minDistance / footmanPositions.size());
     }
 
@@ -165,77 +168,87 @@ public class GameState
      * y += direction.yComponent()
      *
      * @return All possible actions and their associated resulting game state
+     *
+     *** We could not find a way to have this method behave dynamically (i.e., accept an arbitrary number of footmen)
+     *** so it is designed to handle exactly two footmen.
      */
     public List<GameStateChild> getChildren() 
     {
-    	List<GameStateChild> children = new ArrayList<GameStateChild>();
+    	List<GameStateChild> children = new ArrayList<GameStateChild>();	// The list of children to be returned
 		
     	// Look in directions NORTH, SOUTH, EAST, and WEST
     	for (Direction direction1 : getCardinal())
     	{
+    		// Look in every direction for every direction we're looking in
     		for (Direction direction2 : getCardinal())
     		{
     			// Generate possible actions from this state for each footman unit    		
-        		int unitID1 = 0;
-        		int unitID2 = 1;
-        		UnitView unit1 = this.parentState.getUnit(unitID1);
-        		UnitView unit2 = this.parentState.getUnit(unitID2);
+        		int unitID1 = 0;	// the first footman id
+        		int unitID2 = 1;	// the second footman id
+        		UnitView unit1 = this.parentState.getUnit(unitID1); // footman 1
+        		UnitView unit2 = this.parentState.getUnit(unitID2);	// footman 2
     		
-        		Integer archerID = getArcherInRange(unit1.getXPosition(), unit1.getYPosition());        
+        		Integer archerID = getArcherInRange(unit1.getXPosition(), unit1.getYPosition());	// Checks if an archer is in attacking range        
         		
-        		int nextFootman1XPosition;
+        		int nextFootman1XPosition;	// The next position of the footman in a child game state
         		int nextFootman1YPosition;
         		
-        		int nextFootman2XPosition;
+        		int nextFootman2XPosition;	// The next position of the second footman in a child game state
         		int nextFootman2YPosition;
         		
+        		// Check that the next state actually has positions mapped to the footman
         		if (footmanPositions.containsKey(unit1) && footmanPositions.containsKey(unit2))
         		{
+        			// Update footman positions given the directions
         			nextFootman1XPosition = footmanPositions.get(unit1).xPosition + direction1.xComponent();
             		nextFootman1YPosition = footmanPositions.get(unit1).yPosition + direction1.yComponent();
             		
             		nextFootman2XPosition = footmanPositions.get(unit2).xPosition + direction2.xComponent();
             		nextFootman2YPosition = footmanPositions.get(unit2).yPosition + direction2.yComponent();            	
         		
-            		// See if an archer is in range to attack
+            		// See if an archer is in range to attack and that the next state is in bounds for both footmen
             		if (archerID != null && inBounds(nextFootman1XPosition, nextFootman1YPosition) && inBounds(nextFootman2XPosition, nextFootman2YPosition))
             		{
             			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
             			
+            			// Add primitive attack actions to each footman
             			stateActions.put(unitID1, Action.createPrimitiveAttack(unitID1, archerID));
             			stateActions.put(unitID2, Action.createPrimitiveAttack(unitID2, archerID));
             			
             			GameState nextGameState = new GameState(this.parentState, false);
             			
+            			// Remap the unit in the new game state with its updated future position
             			nextGameState.footmanPositions.remove(unit1);
             			nextGameState.footmanPositions.remove(unit2);
             			nextGameState.footmanPositions.put(unit1, new FootmanPosition(nextFootman1XPosition, nextFootman1YPosition));
             			nextGameState.footmanPositions.put(unit2, new FootmanPosition(nextFootman2XPosition, nextFootman2YPosition));
             			
+            			// Since we are attacking in this state, assign a very high utility
             			nextGameState.utility = Double.POSITIVE_INFINITY;
             			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);
-        				children.add(nextChild);
+        				children.add(nextChild);	// Add the child
             		}
             		// The resulting move is still inbounds
             		else if (inBounds(nextFootman1XPosition, nextFootman1YPosition) && inBounds(nextFootman2XPosition, nextFootman2YPosition))
             		{        			
             			Map<Integer, Action> stateActions = new HashMap<Integer, Action>();
             			
+            			// Add move actions to each footman
             			stateActions.put(unitID1, Action.createPrimitiveMove(unitID1, direction1));
             			stateActions.put(unitID2, Action.createPrimitiveMove(unitID2, direction2));
-            			
-            			
-            			
-            			GameState nextGameState = new GameState(this.parentState, false);
 
+            			GameState nextGameState = new GameState(this.parentState, false);
+            			
+            			// Remap the unit in the new game state with its updated future position
             			nextGameState.footmanPositions.remove(unit1);
             			nextGameState.footmanPositions.remove(unit2);
             			nextGameState.footmanPositions.put(unit1, new FootmanPosition(nextFootman1XPosition, nextFootman1YPosition));
             			nextGameState.footmanPositions.put(unit2, new FootmanPosition(nextFootman2XPosition, nextFootman2YPosition));
             			
-            			nextGameState.calculateUtility();        			// Calculate utility of state
+            			// Calculate utility of state
+            			nextGameState.calculateUtility();
             			GameStateChild nextChild = new GameStateChild(stateActions, nextGameState);        			                			    			
-        				children.add(nextChild);        				
+        				children.add(nextChild);     // Add the child   				
             		}        	
         		}
     		}	
@@ -245,30 +258,8 @@ public class GameState
     }
     
     /**
-     * 
-     * @param actions
-     * @param state
-     * @return
-     */
-    private GameStateChild generateGameStateChild(HashMap<Integer, Action> actions, GameState state)
-    {
-    	return new GameStateChild(actions, state);
-    }
-    
-    /**
-     * 
-     * @param state
-     * @param isInitial
-     * @return
-     */
-    private GameState generateGameState(State.StateView state, boolean isInitial)
-    {
-    	return new GameState(state, isInitial);
-    }
-    
-    /**
      * Get the cardinal directions for footman movement
-     * @return
+     * @return an array of the cardinal directions
      */
     private Direction[] getCardinal()
     {
@@ -314,21 +305,9 @@ public class GameState
     }
     
     /**
-     * Prints the coordinates of the footman's cell location in a given GameState
-     * @param gameState
+     * Prints the coordinates of each footman's cell location
      * @return
      */
-    private String printCoordinates(GameState gameState)
-    {
-    	return "(" + gameState.getXPosition() + ", " + gameState.getYPosition() + ")";
-    }
-    
-    private String printCoordinates(UnitView unit) 
-    {
-    	return "(" + footmanPositions.get(unit).xPosition + ", " + footmanPositions.get(unit).yPosition + ")";
-    }
-    
-    
     public String getFootmanCoordinates()
     {
     	StringBuilder footmanCoordinates = new StringBuilder();
@@ -340,41 +319,11 @@ public class GameState
     }
     
     /**
-     * 
-     * @return
+     * This class maps current and future potential positions to a footman unit.  It is used to look 
+     * at future states and analyze the positions of the footmen.
+     * @author Tim Sesler
+     * @author Adam Boe
      */
-    public int getXPosition()
-    {
-    	return new Integer(xPosition);
-    }
-    
-    /**
-     * 
-     * @return
-     */
-    public int getYPosition()
-    {
-    	return new Integer(yPosition);
-    }
-    
-    /**
-     * Setter method for x position
-     * @param xPosition
-     */
-    public void setXPosition(int xPosition)
-    {
-    	this.xPosition = xPosition;
-    }
-    
-    /**
-     * Setter method for y position
-     * @param yPosition
-     */
-    public void setYPosition(int yPosition)
-    {
-    	this.yPosition = yPosition;
-    }
-    
     private class FootmanPosition
     {
     	public int xPosition;
